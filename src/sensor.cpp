@@ -43,11 +43,13 @@ opendlv::proxy::VoltageReading Sensor::step() noexcept
     frame = m_frame;
   }
 
+  float const sensorMax = 0.5f;
+
   // TODO: Add offsets.
   double x1{frame.x()};
   double y1{frame.y()};
-  double x2{x1 + std::sin(m_yaw)};
-  double y2{y1 + std::cos(m_yaw)};
+  double x2{x1 + std::cos(frame.yaw() + m_yaw) * sensorMax};
+  double y2{y1 + std::sin(frame.yaw() + m_yaw) * sensorMax};
   Line line{x1, y1, x2, y2};
 
   float maxVoltage = 0.0f;
