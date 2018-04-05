@@ -96,7 +96,6 @@ int32_t main(int32_t argc, char **argv) {
         return true;
       }};
 
-
     od4.timeTrigger(FREQ, atFrequency);
   }
   return retCode;
