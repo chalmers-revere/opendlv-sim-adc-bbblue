@@ -35,7 +35,7 @@ void Sensor::setFrame(opendlv::sim::Frame const &frame) noexcept
   m_frame = frame;
 }
 
-opendlv::proxy::VoltageReading Sensor::step() noexcept
+std::pair<opendlv::proxy::VoltageReading, opendlv::proxy::DistanceReading> Sensor::step() noexcept
 {
   opendlv::sim::Frame frame;
   {
@@ -52,21 +52,29 @@ opendlv::proxy::VoltageReading Sensor::step() noexcept
   double y2{y1 + std::sin(frame.yaw() + m_yaw) * sensorMax};
   Line line{x1, y1, x2, y2};
 
-  float maxVoltage = 0.0f;
+  float voltage = 0.0f;
+  float distance = 0.34f;
   for (Line wall : m_walls) {
     std::pair<bool, double> intersection = checkIntersectionAndDistance(line, wall);
     if (intersection.first) {
-      double distance = intersection.second;
-      float voltage = convertDistanceToIrVoltage(distance);
-      if (voltage > maxVoltage) {
-        maxVoltage = (voltage < 1.8f) ? voltage : 1.8f;
+      if (intersection.second < 0.0) {
+        voltage = 1.8f;
+        distance = 0.0f; 
+      } else if (intersection.second < 0.34) {
+        voltage = convertDistanceToIrVoltage(distance);
+        distance = static_cast<float>(intersection.second);
       }
     }
   }
 
   opendlv::proxy::VoltageReading voltageReading;
-  voltageReading.voltage(maxVoltage);
-  return voltageReading;
+  voltageReading.voltage(voltage);
+
+  opendlv::proxy::DistanceReading distanceReading;
+  distanceReading.distance(distance);
+  
+  return std::pair<opendlv::proxy::VoltageReading,
+         opendlv::proxy::DistanceReading>(voltageReading, distanceReading);
 }
   
 std::pair<bool, double> Sensor::checkIntersectionAndDistance(Line a, Line b) const noexcept

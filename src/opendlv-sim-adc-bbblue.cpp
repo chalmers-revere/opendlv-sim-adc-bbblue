@@ -85,12 +85,14 @@ int32_t main(int32_t argc, char **argv) {
 
     auto atFrequency{[&FRAME_ID, &ID, &VERBOSE, &DT, &sensor, &od4]() -> bool
       {
-        auto voltageReading = sensor.step();
+        auto reading = sensor.step();
 
         cluon::data::TimeStamp sampleTime;
-        od4.send(voltageReading, sampleTime, ID);
+        od4.send(reading.first, sampleTime, ID);
+        od4.send(reading.second, sampleTime, ID);
         if (VERBOSE) {
-          std::cout << "Sensor reading is " << voltageReading.voltage() << " V." << std::endl;
+          std::cout << "Sensor reading is " << reading.first.voltage() << " V (" 
+            << reading.second.distance() << "m)." << std::endl;
         }
 
         return true;
